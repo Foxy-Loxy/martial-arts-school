@@ -3,6 +3,7 @@ import {
     controller,
     httpGet,
     httpPost,
+    httpPut,
     interfaces,
     requestBody,
     requestParam,
@@ -14,6 +15,7 @@ import { validateOrReject } from 'class-validator';
 import TYPE from '../constants/types';
 import Trainer from '../models/Trainer';
 import CreateTrainerDto from '../models/dto/Trainer/createTrainerDto';
+import UpdateTrainerDto from '../models/dto/Trainer/updateTrainerDto';
 
 @controller('/api/trainer')
 export default class TrainerController extends BaseHttpController implements interfaces.Controller {
@@ -40,5 +42,19 @@ export default class TrainerController extends BaseHttpController implements int
                 id,
             }),
         );
+    }
+
+    @httpPut('/:id')
+    private async update(
+        @requestBody() updatedTrainerData: DeepPartial<UpdateTrainerDto>,
+        @requestParam('id') id: number,
+    ): Promise<JsonResult> {
+        await validateOrReject(new UpdateTrainerDto(updatedTrainerData));
+        const foundTrainer = await this.trainerRepository.findOneOrFail({
+            id,
+        });
+        const updatedTrainer = this.trainerRepository.merge(foundTrainer, updatedTrainerData);
+        await this.trainerRepository.update(id, updatedTrainer);
+        return this.json(updatedTrainer);
     }
 }
