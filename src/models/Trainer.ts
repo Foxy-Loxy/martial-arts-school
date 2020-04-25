@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { IsInt, IsDate, Min, Max, IsBoolean, IsEnum, IsString } from 'class-validator';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, BeforeInsert } from 'typeorm';
+import { Exclude, classToPlain } from 'class-transformer';
+import bcrypt from 'bcrypt';
 import LevelType from '../constants/trainer';
 
 @Entity()
@@ -7,64 +8,49 @@ export default class Trainer {
     @PrimaryGeneratedColumn()
     id!: number;
 
+    @Column({
+        unique: true,
+    })
+    username!: string;
+
+    @Exclude()
     @Column()
-    @IsString()
-    @Max(255)
+    password!: string;
+
+    @Column()
     name!: string;
 
     @Column()
-    @IsString()
-    @Max(255)
-    surname!: string;
+    surName!: string;
 
     @Column()
-    @IsString()
-    @Max(255)
     fathersName!: string;
 
     @Column()
-    @IsString()
-    @Max(255)
     address!: string;
 
     @Column()
-    @IsInt()
-    @Min(1)
-    @Max(10)
     level!: number;
 
     @Column({
         type: 'enum',
         enum: LevelType,
     })
-    @IsEnum(LevelType)
     levelType!: LevelType;
 
     @Column()
-    @IsDate()
     birthDate!: Date;
 
     @Column()
-    @IsString()
-    @Max(255)
     photo!: string;
 
     @Column()
-    @IsString()
-    @Max(255)
     title!: string;
 
     @Column({
         type: 'text',
-        length: 1024,
     })
     about!: string;
-
-    @Column({
-        update: false,
-    })
-    @IsBoolean()
-    readonly isMaster!: boolean;
 
     @CreateDateColumn({
         update: false,
@@ -75,4 +61,13 @@ export default class Trainer {
         update: false,
     })
     readonly updatedAt!: Date;
+
+    @BeforeInsert()
+    async hashPassword(): Promise<void> {
+        this.password = await bcrypt.hash(this.password, 10);
+    }
+
+    toJSON(): object {
+        return classToPlain(this);
+    }
 }
