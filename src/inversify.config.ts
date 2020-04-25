@@ -3,17 +3,25 @@ import { Repository } from 'typeorm';
 import Trainer from './models/Trainer';
 import getDbConnection from './db';
 import TYPE from './constants/types';
-import getRepository from './repositories/trainerRepository';
+import getTrainerRepository from './repositories/trainerRepository';
 
 // Controller imports
 import './controllers/trainerController';
+import getSchoolRepository from './repositories/schoolRepository';
+import School from './models/School';
 
 const bindings = new AsyncContainerModule(async (bind) => {
     await getDbConnection();
 
     bind<Repository<Trainer>>(TYPE.TrainerRepository)
         .toDynamicValue(() => {
-            return getRepository();
+            return getTrainerRepository();
+        })
+        .inRequestScope();
+
+    bind<Repository<School>>(TYPE.SchoolRepository)
+        .toDynamicValue(() => {
+            return getSchoolRepository();
         })
         .inRequestScope();
 });
